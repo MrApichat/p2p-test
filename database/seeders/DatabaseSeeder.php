@@ -14,20 +14,11 @@ class DatabaseSeeder extends Seeder
      */
     public function run()
     {
-        \App\Models\User::factory(10)->create([
-            'password' => bcrypt('12345678')
-        ]);
-
-        \App\Models\User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
-            'password' => bcrypt('12345678')
-        ]);
-        
-        \App\Models\User::factory()->create([
-            'name' => 'Test Second',
-            'email' => 'test2@example.com',
-            'password' => bcrypt('12345678')
+        $this->call([
+            UserSeeder::class,
+            CurrencySeeder::class,
+            PaymentMethodSeeder::class,
+            WalletSeeder::class
         ]);
     }
 }
