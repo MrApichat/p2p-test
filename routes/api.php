@@ -3,6 +3,7 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\LoginController;
+use App\Http\Controllers\TransferOrderController;
 use App\Http\Controllers\WalletController;
 
 /*
@@ -29,4 +30,6 @@ Route::group(['middleware' => 'auth:sanctum'], function () {
         return response()->json([1, 2, 3, 4, 5, 6, 7, 8, 9]);
     });
     Route::get('wallets', [WalletController::class, 'show']);
+    Route::post('transfer_order', [TransferOrderController::class, 'create']);
+    Route::get('transfer_orders', [TransferOrderController::class, 'show']);
 });

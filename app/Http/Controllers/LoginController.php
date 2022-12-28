@@ -6,6 +6,8 @@ use Illuminate\Http\Request;
 use App\Models\User;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
+use App\Models\Wallet;
+use App\Models\Currency;
 
 
 class LoginController extends Controller
@@ -41,9 +43,20 @@ class LoginController extends Controller
 
             $validate['password'] = bcrypt($validate['password']);
             $user = User::create($validate);
+            $coins = Currency::all()->where('type', 'coin');
+            foreach ($coins as $coin) {
+                $owner = $user->id;
+                $code = $coin->id;
+                $wallet = [
+                    'user_id' => $owner,
+                    'coin_id' => $code,
+                    'total' => 0,
+                    'in_order' => 0
+                ];
+                Wallet::create($wallet);
+            }
             $token = $user->createToken('');
             return response()->json(['token' => explode('|', $token->plainTextToken)[1]]);
-
         } catch (\Illuminate\Validation\ValidationException $e) {
             return response()->json(['message' => $e->validator->errors()], 422);
         }

@@ -10,11 +10,12 @@ class Wallet extends Model
     use HasFactory;
 
     protected $fillable = [
-        'id',
         'user',
         'currency',
         'total',
-        'in_order'
+        'in_order',
+        'user_id',
+        'coin_id'
     ];
 
     protected $hidden = [
