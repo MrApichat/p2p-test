@@ -12,4 +12,9 @@ class PaymentMethod extends Model
     protected $fillable = [
         'name',
     ];
+
+    public function merchant_orders()
+    {
+        return $this->belongsToMany(MerchantOrder::class, 'merchant_orders_payment_methods', 'payment_method_id', 'merchant_order_id');
+    }
 }
