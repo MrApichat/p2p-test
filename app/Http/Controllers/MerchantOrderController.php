@@ -108,6 +108,7 @@ class MerchantOrderController extends Controller
                 'coin' => ['required'],
                 // 'payment_method' => ['required'] // array
             ]);
+            //adding status and history and payment_method in filter
 
             if (request()->input('type') != 'buy' && request()->input('type') != 'sell') return response()->json(['message' => 'only has buy and sell type'], 401);
 

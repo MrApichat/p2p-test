@@ -16,13 +16,13 @@ class WalletSeeder extends Seeder
     public function run()
     {
         foreach (range(1, 5) as $i) {
-            foreach (range(1,2) as $j) {
+            foreach (range(1, 2) as $j) {
                 Wallet::factory()->create([
                     'user_id' => $j,
-                    'coin_id' => $i
+                    'coin_id' => $i,
+                    'total' => rand(50, 100)
                 ]);
             }
-            
         }
     }
 }
