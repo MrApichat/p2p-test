@@ -4,6 +4,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\MerchantOrderController;
+use App\Http\Controllers\TradeOrderController;
 use App\Http\Controllers\TransferOrderController;
 use App\Http\Controllers\WalletController;
 
@@ -35,4 +36,9 @@ Route::group(['middleware' => 'auth:sanctum'], function () {
     Route::post('transfer_order', [TransferOrderController::class, 'create']);
     Route::get('transfer_orders', [TransferOrderController::class, 'show']);
     Route::post('merchant_orders', [MerchantOrderController::class, 'create']);
+    Route::post('trade_orders', [TradeOrderController::class, 'create']);
+    Route::put('trade_orders/{id}', [TradeOrderController::class, 'put']);
+    Route::delete('trade_orders/{id}', [TradeOrderController::class, 'destroy']);
+    Route::delete('merchant_orders/{id}', [MerchantOrderController::class, 'destroy']);
+    Route::get('trade_orders', [TradeOrderController::class, 'show']);
 });

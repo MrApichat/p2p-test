@@ -37,7 +37,11 @@ class MerchantOrder extends Model
 
     public function payment_methods()
     {
-        return $this->belongsToMany(PaymentMethod::class,'merchant_orders_payment_methods','merchant_order_id','payment_method_id');
+        return $this->belongsToMany(PaymentMethod::class, 'merchant_orders_payment_methods', 'merchant_order_id', 'payment_method_id');
     }
 
+    public function trade_orders()
+    {
+        return $this->hasMany(TradeOrder::class, 'id', 'merchant_order_id');
+    }
 }

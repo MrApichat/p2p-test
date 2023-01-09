@@ -6,6 +6,7 @@ use App\Models\Currency;
 use App\Models\MerchantOrder;
 use App\Models\MerchantOrdersPaymentMethod;
 use App\Models\PaymentMethod;
+use App\Models\TradeOrder;
 use App\Models\Wallet;
 use Exception;
 use Illuminate\Http\Request;
@@ -51,7 +52,7 @@ class MerchantOrderController extends Controller
             //check available_coin is less than total when is buy type
             if (request()->type == 'buy') {
                 $wallet = Wallet::where([['user_id', Auth::id()], ['coin_id', $coin->id]])->get()->first();
-                if ($wallet->total - $wallet->in_order < request()->amount) return response()->json(['message' => 'Your balance has not enough to create order'], 401);
+                if ($wallet->total - $wallet->in_order < request()->available_coin) return response()->json(['message' => 'Your balance has not enough to create order'], 401);
             }
 
             //lower limit is possible
@@ -82,12 +83,20 @@ class MerchantOrderController extends Controller
                 ]);
             }
 
+            if (request()->type == 'buy') {
+                $wallet->in_order = $wallet->in_order + request()->available_coin;
+
+                $wallet->save();
+            }
+
+
             $merchant = MerchantOrder::with(['payment_methods', "fiat", "coin", "merchant"])->where('id', $order->id)->get()->first();
             return response()->json($merchant, 200);
         } catch (Exception $e) {
             return response()->json(['message' => $e->getMessage()], 422);
         }
     }
+
 
     public function show()
     {
@@ -108,7 +117,6 @@ class MerchantOrderController extends Controller
             if (!$fiat) return response()->json(['message' => 'fiat does not has in database'], 401);
 
             //coin is coin
-
             $coin = Currency::where('type', 'coin')->where('name', request()->input('coin'))->get()->first();
 
             if (!$coin) return response()->json(['message' => 'coin does not has in database'], 401);
@@ -116,7 +124,42 @@ class MerchantOrderController extends Controller
             $merchant = MerchantOrder::with(['payment_methods', "fiat", "coin", "merchant"])->where([['type', request()->input('type')], ['fiat_id', $fiat->id], ['coin_id', $coin->id]])->get();
 
             return response()->json($merchant, 200);
+        } catch (Exception $e) {
+            return response()->json(['message' => $e->getMessage()], 422);
+        }
+    }
 
+    public function destroy($id)
+    {
+        //check there are trade orders are opened
+        //decease  available amount from wallet coin
+        //change status
+
+        try {
+            //status must be start
+            $merchant = MerchantOrder::with(['payment_methods', "fiat", "coin", "merchant"])->where('id', $id)->get()->first();
+
+            if (!$merchant) return response()->json(['message' => 'Can not find merchant order'], 401);
+
+            if ($merchant->status != 'start') return response()->json(['message' => 'Status is not correct'], 401);
+
+            //check there are trade orders are opened
+            $trade_orders = TradeOrder::where([['merchant_order_id', $merchant->id], [function ($query) {
+                $query->where('status', 'create')->orWhere('status', 'waiting');
+            }]])->get()->first();
+            if ($trade_orders) return response()->json(['message' => 'This order still has open trade order'], 401);
+
+            //decease  available amount from wallet coin
+            $wallet = Wallet::where([['user_id',  $merchant->merchant_id], ['coin_id', $merchant->coin_id]])->get()->first();
+            if (!$wallet) return response()->json(['message' => 'Can not find wallet'], 401);
+            $wallet->in_order = $wallet->in_order - $merchant->available_coin;
+            $wallet->save();
+
+
+            //change status
+            $merchant->status = 'closed';
+            $merchant->save();
+            return response()->json($merchant, 200);
         } catch (Exception $e) {
             return response()->json(['message' => $e->getMessage()], 422);
         }
