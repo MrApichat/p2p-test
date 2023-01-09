@@ -16,10 +16,13 @@ class PaymentMethodSeeder extends Seeder
     public function run()
     {
         PaymentMethod::factory()->create([
-            'name' => 'bank transfer',
+            'name' => 'bank_transfer',
         ]);
         PaymentMethod::factory()->create([
-            'name' => 'true wallet',
+            'name' => 'true_wallet',
+        ]);
+        PaymentMethod::factory()->create([
+            'name' => 'shopee_pay'
         ]);
     }
 }
