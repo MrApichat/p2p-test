@@ -60,7 +60,7 @@ class MerchantOrderController extends Controller
 
             // fiat/coin must unique by type
 
-            if (MerchantOrder::where([['fiat_id', $fiat->id], ['coin_id', $coin->id], ['type', request()->type]])->get()->first()) return response()->json(['message' => 'You already have Order.'], 401);
+            if (MerchantOrder::where([['fiat_id', $fiat->id], ['coin_id', $coin->id], ['type', request()->type], ['merchant_id', Auth::id()]])->get()->first()) return response()->json(['message' => 'You already have Order.'], 401);
 
             // create
             $order = MerchantOrder::create([
@@ -122,7 +122,28 @@ class MerchantOrderController extends Controller
 
             if (!$coin) return response()->json(['message' => 'coin does not has in database'], 401);
 
-            $merchant = MerchantOrder::with(['payment_methods', "fiat", "coin", "merchant"])->where([['type', request()->input('type')], ['fiat_id', $fiat->id], ['coin_id', $coin->id]])->get();
+            $merchant = MerchantOrder::with(['payment_methods', "fiat", "coin", "merchant"])
+                ->where(function ($q) {
+                    if (Auth::id()) {
+                        if (request()->history) {
+                            //got some issue that cannot complete right now
+                            // $q->where('merchant_id', Auth::id());
+                        } else {
+                            // $q->where('merchant_id', '!=', Auth::id());
+                        }
+                    }
+                })
+                ->where(
+                    [
+                        ['type', request()->type],
+                        ['fiat_id', $fiat->id], ['coin_id', $coin->id],
+                        ['status', request()->history ? request()->status : 'start']
+                    ]
+                )
+
+                ->whereHas('payment_methods', function ($q) {
+                    if (request()->payment_method) $q->where('name', request()->payment_method);
+                })->get();
 
             return response()->json($merchant, 200);
         } catch (Exception $e) {

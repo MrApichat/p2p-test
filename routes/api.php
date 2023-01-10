@@ -36,6 +36,7 @@ Route::group(['middleware' => 'auth:sanctum'], function () {
     Route::post('transfer_order', [TransferOrderController::class, 'create']);
     Route::get('transfer_orders', [TransferOrderController::class, 'show']);
     Route::post('merchant_orders', [MerchantOrderController::class, 'create']);
+    Route::get('merchant_orders_list', [MerchantOrderController::class, 'show']);
     Route::post('trade_orders', [TradeOrderController::class, 'create']);
     Route::put('trade_orders/{id}', [TradeOrderController::class, 'put']);
     Route::delete('trade_orders/{id}', [TradeOrderController::class, 'destroy']);
