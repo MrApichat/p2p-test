@@ -77,13 +77,13 @@ class TransferOrderController extends Controller
         // sort by coin or status
         $orders = TransferOrder::with(['coin', 'receiver', 'sender']);
 
-        if (request()->input('type') == 'sender') {
-            $orders->where('sender_id', Auth::id());
-        } else if (request()->input('type') == 'receiver') {
-            $orders->where('receiver_id', Auth::id());
-        } else {
-            $orders->where('sender_id', Auth::id())->orWhere('receiver_id', Auth::id());
-        }
+        // if (request()->input('type') == 'sender') {
+        //     $orders->where('sender_id', Auth::id());
+        // } else if (request()->input('type') == 'receiver') {
+        //     $orders->where('receiver_id', Auth::id());
+        // } else {
+        //     $orders->where('sender_id', Auth::id())->orWhere('receiver_id', Auth::id());
+        // }
 
         $orders->where(function ($q) {
             if (request()->input('type') == 'sender') {
@@ -98,10 +98,8 @@ class TransferOrderController extends Controller
 
                 $q->where('status', request()->input('status'));
             }
-        })->leftJoin('currencies', 'currencies.id', '=', 'coin_id')->where(function ($q) {
-            if (request()->input('coin')) {
-                $q->where('currencies.name', request()->input('coin'));
-            }
+        })->whereHas('coin', function ($q) {
+            if (request()->coin) $q->where('name', request()->coin);
         });
 
         return response()->json($orders->get(), 200);
