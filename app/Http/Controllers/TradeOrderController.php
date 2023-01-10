@@ -38,7 +38,7 @@ class TradeOrderController extends Controller
             if (!$merchant_paymet_method) return response()->json(['message' => 'payment method not in merchant order'], 401);
 
             //amount of coins are resonable
-            $merchant_order = MerchantOrder::find(request()->merchant_order_id)->get()->first();
+            $merchant_order = MerchantOrder::where('id', request()->merchant_order_id)->get()->first();
 
             if (!$merchant_order) return response()->json(['message' => 'merchant order not found'], 401);
 
@@ -49,6 +49,7 @@ class TradeOrderController extends Controller
 
             // auth_id != merchant
             // if (Auth::id() == $merchant_order->merchant_id) return response()->json(['message' => 'you can not trade order that you had created '], 401);
+            if (request()->amount * $merchant_order->price < $merchant_order->lower_limit) return response()->json(['message' => 'Your amount are less than lower limit that merchant setted.'], 401);
 
             $order = TradeOrder::create([
                 "user_id" => Auth::id(),
@@ -102,7 +103,7 @@ class TradeOrderController extends Controller
             if (request()->status == 'complete') {
                 if ($trade_order->status != 'waiting') return response()->json(['message' => 'Order is not Waiting status'], 401);
 
-                echo $trade_order->merchant_order;
+
                 if ($trade_order->merchant_order->type == 'sell') {
                     if ($trade_order->user_id != Auth::id()) return response()->json(['message' => 'You do not have permission to change status'], 401);
                 } else if ($trade_order->merchant_order->type == 'buy') {
@@ -166,28 +167,18 @@ class TradeOrderController extends Controller
             //search by coin id
 
             $orders = TradeOrder::with(['merchant_order' => ['fiat', 'coin', 'merchant'], 'payment_method'])->where('user_id', Auth::id())
-                // ->where(function ($q) {
-                //     if (request()->payment_method) {
-                //         $payment = PaymentMethod::where('name', request()->payment_method)->get()->first();
-                //         $q->where('payment_method_id', $payment->id);
-                //     }
-                // })
                 ->whereHas('payment_method', function ($q) {
                     if (request()->payment_method) $q->where('name', request()->payment_method);
-                })
-                ->whereHas('merchant_order.fiat', function ($q) {
+                })->whereHas('merchant_order', function ($q) {
+                    if (request()->type) $q->where('type', request()->type);
+                })->whereHas('merchant_order.fiat', function ($q) {
                     if (request()->fiat) $q->where([['type', 'fiat'], ['name', request()->fiat]]);
                 })->whereHas('merchant_order.coin', function ($q) {
                     if (request()->coin) $q->where([['type', 'coin'], ['name', request()->coin]]);
-                })->whereHas('merchant_order', function ($q) {
-                    if (request()->type) $q->where(['type', request()->type]);
                 })->where(function ($q) {
                     if (request()->status) $q->where('status', request()->status);
                 })
                 ->get();
-
-
-
 
             return response()->json($orders, 200);
         } catch (Exception $e) {
